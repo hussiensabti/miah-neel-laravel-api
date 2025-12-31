@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>اختبار Login API</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Arial;max-width:900px;margin:20px auto;padding:0 12px}
+    input,button{padding:10px;font-size:16px}
+    input{width:100%;margin:6px 0}
+    button{cursor:pointer}
+    pre{background:#111;color:#0f0;padding:12px;overflow:auto;white-space:pre-wrap}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:700px){.row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <h2>اختبار POST /api/login</h2>
+
+  <div class="row">
+    <div>
+      <label>API URL</label>
+      <input id="url" value="https://basratech.site/api/login" />
+      <label>Phone</label>
+      <input id="phone" value="07700000000" />
+      <label>Password</label>
+      <input id="pass" type="password" value="password" />
+      <button onclick="test()">اختبار</button>
+      <button onclick="clearLog()">مسح</button>
+    </div>
+    <div>
+      <label>Log</label>
+      <pre id="log"></pre>
+    </div>
+  </div>
+
+<script>
+const logEl = document.getElementById('log');
+
+function log(msg){
+  const t = new Date().toISOString();
+  logEl.textContent += `\n[${t}] ${msg}`;
+}
+
+function clearLog(){
+  logEl.textContent = '';
+}
+
+async function test(){
+  clearLog();
+  const url = document.getElementById('url').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const pass = document.getElementById('pass').value;
+
+  const payload = { phone, password: pass };
+
+  log(`URL: ${url}`);
+  log(`Payload: ${JSON.stringify(payload)}`);
+  log('--- SENDING ---');
+
+  const start = performance.now();
+
+  try{
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload),
+      // إذا عندك كوكيز/سيشن وتحتاجها:
+      // credentials: 'include',
+    });
+
+    const ms = Math.round(performance.now() - start);
+    log(`Connected. Time: ${ms}ms`);
+    log(`HTTP Status: ${res.status} ${res.statusText}`);
+
+    // headers
+    const headersObj = {};
+    res.headers.forEach((v,k)=>headersObj[k]=v);
+    log(`Headers: ${JSON.stringify(headersObj, null, 2)}`);
+
+    // body
+    const text = await res.text();
+    log(`Body (raw):\n${text}`);
+
+    // حاول parse JSON
+    try{
+      const json = JSON.parse(text);
+      log(`Body (json):\n${JSON.stringify(json, null, 2)}`);
+    }catch(_){
+      log('Body is not valid JSON (or blocked by CORS).');
+    }
+
+  }catch(e){
+    const ms = Math.round(performance.now() - start);
+    log(`FAILED after ${ms}ms`);
+    log(`Error name: ${e?.name}`);
+    log(`Error message: ${e?.message}`);
+
+    log('\nملاحظات سريعة:');
+    log('- إذا شفت "Failed to fetch" غالبًا: اتصال/SSL/DNS/CORS.');
+    log('- إذا CORS: المتصفح يمنع قراءة الرد حتى لو السيرفر شغال. جرّب curl تحت.');
+  }
+}
+</script>
+</body>
+</html>
