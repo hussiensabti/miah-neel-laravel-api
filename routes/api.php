@@ -3,6 +3,14 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/ping', function () {
+    return response()->json([
+        'status' => 'ok',
+        'env' => app()->environment(),
+        'time' => now(),
+    ]);
+});
+
 use App\Http\Controllers\Admin\AdminAccountsController;
 
 Route::middleware(['auth:sanctum'])
